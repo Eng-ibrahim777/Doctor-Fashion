@@ -9,7 +9,7 @@
 
 body {
     background: #f7f7f5;
-    color: #111827;
+    color: #000104;
 }
 
 button,
@@ -24,7 +24,7 @@ button {
 
 .top-nav {
     height: 75px;
-    background: #090909;
+    background: #000104;
     color: white;
     display: flex;
     align-items: center;
@@ -33,6 +33,11 @@ button {
     position: sticky;
     top: 0;
     z-index: 900;
+    transition: transform 0.3s ease-in-out;
+}
+
+.top-nav.hide-header {
+    transform: translateY(-100%);
 }
 
 .logo {
@@ -40,8 +45,6 @@ button {
     font-weight: 800;
     color: #ffffff;
 }
-
-/* --- تنسيقات الهيدر والأزرار القابلة للتفاعل --- */
 
 .header-actions {
     display: flex;
@@ -104,17 +107,13 @@ button {
     transition: all 0.2s ease;
 }
 
-.nav-btn:hover,
-.cart-btn:hover,
-.favorites-btn:hover {
+.nav-btn:hover {
     background: white;
     color: black;
     border-color: white;
 }
 
-.nav-btn:hover .badge,
-.cart-btn:hover #cart-badge,
-.favorites-btn:hover #favorites-badge {
+.nav-btn:hover .badge {
     background-color: #000000;
     color: #ffffff;
 }
@@ -125,7 +124,8 @@ button {
 
 .badge,
 #cart-badge,
-#favorites-badge {
+#favorites-badge,
+#orders-badge {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -139,8 +139,6 @@ button {
     padding: 0 4px;
     transition: all 0.2s ease;
 }
-
-/* --- باقي عناصر الصفحة كما هي --- */
 
 .hero {
     min-height: 500px;
@@ -583,7 +581,7 @@ footer h2 {
 .order-summary {
     background: #f8f8f8;
     padding: 15px;
-    border-radius: 99px;
+    border-radius: 12px;
 }
 
 .order-summary > div {
@@ -678,9 +676,45 @@ footer h2 {
     font-size: 1.2rem;
 }
 
+/* تنسيق القائمة الجانبية للأقسام */
+.sidebar-menu {
+    position: fixed;
+    top: 0;
+    right: -300px;
+    width: 280px;
+    height: 100%;
+    background: #ffffff;
+    box-shadow: -5px 0 25px rgba(0,0,0,0.15);
+    z-index: 2500;
+    transition: right 0.3s ease-in-out;
+}
+
+.sidebar-menu.active {
+    right: 0;
+}
+
+.sidebar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    background: #000104;
+    color: #ffffff;
+}
+
+.sidebar-close-btn {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 2rem;
+    cursor: pointer;
+}
+
+/* تعديلات وتصغير صور المنتجات على الموبايل */
 @media(max-width:900px) {
     .products-grid {
         grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
     }
     .filters-sidebar {
         width: 200px;
@@ -690,18 +724,24 @@ footer h2 {
 @media(max-width:650px) {
     .top-nav {
         height: auto;
-        padding: 15px;
-        gap: 10px;
-        flex-direction: column;
+        padding: 10px 12px;
+        gap: 6px;
+        flex-direction: row;
+        justify-content: space-between;
+    }
+    .logo-container svg {
+        width: 45px !important;
+        height: 45px !important;
+    }
+    .logo {
+        font-size: 1.1rem;
     }
     .header-actions {
-        width: 100%;
-        justify-content: center;
-        flex-wrap: wrap;
+        gap: 6px;
     }
-    .hero {
-        min-height: 420px;
-        padding: 40px 25px;
+    .header-actions button {
+        padding: 6px 10px;
+        font-size: 0.8rem;
     }
     .main-layout {
         display: block;
@@ -712,10 +752,25 @@ footer h2 {
         margin-bottom: 20px;
     }
     .products-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 8px !important;
+        padding: 0 5px;
+    }
+    .product-card {
+        margin-bottom: 5px;
+        border-radius: 8px;
     }
     .product-image {
-        height: 390px;
+        height: 140px !important; /* تصغير ارتفاع الصورة لتناسب الهواتف بدقة ومرونة عالية */
+    }
+    .product-info {
+        padding: 10px;
+    }
+    .product-title {
+        font-size: 0.9rem !important;
+    }
+    .price {
+        font-size: 0.95rem !important;
     }
     .complete-look {
         margin: 30px 15px;
@@ -731,22 +786,103 @@ footer h2 {
         grid-template-columns: 1fr;
         display: grid;
     }
-    .store-address {
-    display: inline-flex;
+}
+/* تنسيق القائمة الجانبية للأقسام */
+.sidebar-links {
+    list-style: none;
+    padding: 10px 0;
+    margin: 0;
+}
+
+.sidebar-links li {
+    margin: 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.sidebar-links li:last-child {
+    border-bottom: none;
+}
+
+.sidebar-links button {
+    display: block;
+    width: 100%;
+    padding: 16px 20px;
+    background: transparent;
+    border: none;
+    font-family: inherit;
+    font-size: 1.05rem;
+    color: #333;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+    text-align: right;
+}
+
+.sidebar-links button:hover {
+    background-color: #f8f9fa;
+    color: #000;
+}
+
+.sidebar-header {
+    display: flex;
+    justify-content: space-between;
     align-items: center;
-    gap: 8px;
-    margin-top: 15px;
-    background: #181818;
-    border: 1px solid #333;
-    padding: 10px 20px;
-    border-radius: 25px;
-    color: #e5e7eb;
-    font-size: 0.95rem;
+    padding: 18px 20px;
+    background: #111;
+    color: #fff;
+}
+
+.sidebar-header h3 {
+    margin: 0;
+    font-size: 1.2rem;
     font-weight: 600;
 }
 
-.store-address .location-icon {
-    font-size: 1.1rem;
+.sidebar-close-btn {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 1.8rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0;
 }
-
+@media(max-width:650px) {
+    .top-nav {
+        height: auto;
+        padding: 8px 10px;
+        flex-direction: column;
+        gap: 8px;
+    }
+    .top-nav > div:first-child {
+        width: 100%;
+        justify-content: space-between;
+    }
+    .logo-container svg {
+        width: 35px !important;
+        height: 35px !important;
+    }
+    .logo {
+        font-size: 1rem;
+    }
+    .header-actions {
+        width: 100%;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 4px;
+    }
+    .header-actions .select-wrapper,
+    .header-actions .nav-btn {
+        width: 100%;
+        justify-content: center;
+        padding: 6px 4px;
+        font-size: 0.75rem;
+    }
+    .lang-select {
+        padding: 6px 8px 6px 20px;
+        font-size: 0.75rem;
+        width: 100%;
+    }
+    .select-wrapper .custom-arrow {
+        left: 6px;
+    }
 }

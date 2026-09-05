@@ -450,7 +450,7 @@ const translations = {
         favTitle: "بەرهەمە دڵخوازەکان",
         sizeGuideTitle: "ڕێنمایی سایزی قاتەکان",
         thSize: "سایز",
-        thChest: "سیgroup (سنگ)",
+        thChest: "سیگما (سنگ)",
         thWaist: "کەمەر",
         stylistTitle: "ڕێکخستنی ستايلت",
         labelSuit: "قات",
@@ -554,7 +554,7 @@ function scrollToProducts() {
 function setCategory(category, button) {
     activeCategory = category;
     document.querySelectorAll(".category").forEach(x => x.classList.remove("active"));
-    button.classList.add("active");
+    if(button) button.classList.add("active");
     applyFilters();
 }
 
@@ -945,72 +945,70 @@ document.addEventListener("DOMContentLoaded", () => {
     changeLanguage(currentLang);
 
     const form = document.getElementById("checkout-form");
-    form.addEventListener("submit", function(e){
-        e.preventDefault();
+    if(form) {
+        form.addEventListener("submit", function(e){
+            e.preventDefault();
 
-        if(!cart.length) {
-            showAlert(translations[currentLang]?.emptyCart || "السلة فارغة.");
-            return;
-        }
+            if(!cart.length) {
+                showAlert(translations[currentLang]?.emptyCart || "السلة فارغة.");
+                return;
+            }
 
-        const delivery = Number(document.getElementById("delivery-location").value);
-        const subtotal = calculateSubtotal();
-        const total = subtotal + delivery - appliedDiscount;
-        let lastOrderId = parseInt(localStorage.getItem("aldoctor_last_order_id") || "1000");
-        const orderId = lastOrderId + 1;
-        localStorage.setItem("aldoctor_last_order_id", orderId);
+            const delivery = Number(document.getElementById("delivery-location").value);
+            const subtotal = calculateSubtotal();
+            const total = subtotal + delivery - appliedDiscount;
+            let lastOrderId = parseInt(localStorage.getItem("aldoctor_last_order_id") || "1000");
+            const orderId = lastOrderId + 1;
+            localStorage.setItem("aldoctor_last_order_id", orderId);
 
-        // تجميع عناصر السلة بالشكل الذي تتوقعه لوحة التحكم
-        const orderItems = cart.map(item => {
-            const p = productsData.find(x => x.id === item.id);
-            return {
-                id: item.id,
-                title: p ? getProductTitle(p) : 'منتج',
-                price: p ? p.price : 0,
-                quantity: item.quantity,
-                size: item.size
+            const orderItems = cart.map(item => {
+                const p = productsData.find(x => x.id === item.id);
+                return {
+                    id: item.id,
+                    title: p ? getProductTitle(p) : 'منتج',
+                    price: p ? p.price : 0,
+                    quantity: item.quantity,
+                    size: item.size
+                };
+            });
+
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString("ar-IQ", { hour: '2-digit', minute: '2-digit' });
+            const dateStr = now.toLocaleDateString("ar-IQ");
+
+            const newOrder = {
+                id: orderId,
+                customerName: document.getElementById("customer-name").value,
+                name: document.getElementById("customer-name").value,
+                phone: document.getElementById("customer-phone").value,
+                address: document.getElementById("customer-address").value,
+                payment: document.getElementById("payment-method").value,
+                items: orderItems,
+                total: total,
+                status: "جديد",
+                date: dateStr,
+                time: timeStr
             };
+
+            const existingOrders = JSON.parse(localStorage.getItem("aldoctor_orders") || "[]");
+            existingOrders.push(newOrder);
+            localStorage.setItem("aldoctor_orders", JSON.stringify(existingOrders));
+
+            const msgSuccess = translations[currentLang]?.orderSuccess || "تم استلام طلبك بنجاح\nرقم الطلب: #";
+            const msgTotal = translations[currentLang]?.orderTotalMsg || "\nالإجمالي: ";
+
+            showAlert(`${msgSuccess}${orderId}${msgTotal}${money(total)}`);
+
+            cart = [];
+            appliedDiscount = 0;
+            updateCartBadge();
+            updateOrdersBadge();
+            this.reset();
+            closeModal("cart-modal");
         });
-
-        const now = new Date();
-        const timeStr = now.toLocaleTimeString("ar-IQ", { hour: '2-digit', minute: '2-digit' });
-        const dateStr = now.toLocaleDateString("ar-IQ");
-
-        // إنشاء كائن الطلب الجديد
-        const newOrder = {
-            id: orderId,
-            customerName: document.getElementById("customer-name").value,
-            name: document.getElementById("customer-name").value,
-            phone: document.getElementById("customer-phone").value,
-            address: document.getElementById("customer-address").value,
-            payment: document.getElementById("payment-method").value,
-            items: orderItems,
-            total: total,
-            status: "جديد",
-            date: dateStr,
-            time: timeStr // إضافة وقت الحجز
-        };
-
-        // حفظ الطلب في localStorage لوحة الإدارة
-        const existingOrders = JSON.parse(localStorage.getItem("aldoctor_orders") || "[]");
-        existingOrders.push(newOrder);
-        localStorage.setItem("aldoctor_orders", JSON.stringify(existingOrders));
-
-        const msgSuccess = translations[currentLang]?.orderSuccess || "تم استلام طلبك بنجاح\nرقم الطلب: #";
-        const msgTotal = translations[currentLang]?.orderTotalMsg || "\nالإجمالي: ";
-
-        showAlert(`${msgSuccess}${orderId}${msgTotal}${money(total)}`);
-
-        cart = [];
-        appliedDiscount = 0;
-        updateCartBadge();
-        updateOrdersBadge();
-        this.reset();
-        closeModal("cart-modal");
-    });
+    }
 });
 
-// فتح نافذة المشتريات وتحديث محتواها
 function openOrdersModal() {
     const ordersBody = document.getElementById("orders-modal-body");
     const existingOrders = JSON.parse(localStorage.getItem("aldoctor_orders") || "[]");
@@ -1019,7 +1017,6 @@ function openOrdersModal() {
         ordersBody.innerHTML = `<p style="text-align: center; color: #777; padding: 20px;">لا توجد مشتريات أو طلبات مسجلة حتى الآن.</p>`;
     } else {
         let html = "";
-        // عرض الطلبات من الأحدث للأقدم
         existingOrders.slice().reverse().forEach(order => {
             let itemsHtml = order.items.map(item => `
                 <li style="margin-bottom: 5px; font-size: 0.95rem;">
@@ -1052,7 +1049,6 @@ function openOrdersModal() {
     updateOrdersBadge();
 }
 
-// تحديث عداد شارة المشتريات
 function updateOrdersBadge() {
     const existingOrders = JSON.parse(localStorage.getItem("aldoctor_orders") || "[]");
     const badge = document.getElementById("orders-badge");
@@ -1066,10 +1062,32 @@ function updateOrdersBadge() {
     }
 }
 
-// استدعاء تحديث العداد عند تحميل الصفحة
 document.addEventListener("DOMContentLoaded", () => {
     updateOrdersBadge();
 });
+
+let lastScrollTop = 0;
+const topNav = document.querySelector('.top-nav');
+
+window.addEventListener('scroll', function() {
+    let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    
+    if (topNav) {
+        if (scrollTop > lastScrollTop && scrollTop > 100) {
+            topNav.classList.add('hide-header');
+        } else {
+            topNav.classList.remove('hide-header');
+        }
+    }
+    lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
+}, false);
+
+function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar-menu');
+    if (sidebar) {
+        sidebar.classList.toggle('active');
+    }
+}
 
 function resetFilters() {
     document.getElementById("search-input").value="";
@@ -1080,7 +1098,14 @@ function resetFilters() {
 
     activeCategory="all";
     document.querySelectorAll(".category").forEach(x=>x.classList.remove("active"));
-    document.querySelector(".category").classList.add("active");
+    const firstCat = document.querySelector(".category");
+    if(firstCat) firstCat.classList.add("active");
 
     applyFilters();
+}
+function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar-menu');
+    if (sidebar) {
+        sidebar.classList.toggle('active');
+    }
 }
